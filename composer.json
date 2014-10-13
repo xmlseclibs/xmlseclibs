@@ -11,5 +11,5 @@
     "minimum-stability": "dev",
     "autoload": {
         "files": ["xmlseclibs.php"]
-    },
+    }
 }
