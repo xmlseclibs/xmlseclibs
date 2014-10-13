@@ -41,15 +41,8 @@
  * @license   http://www.opensource.org/licenses/mit-license.html  MIT License
  * @link      http://phpseclib.sourceforge.net
  */
-
-Namespace File\X509;
-
-/**
- * Include ASN1
- */
-if (!class_exists('ASN1')) {
-    include_once 'ASN1.php';
-}
+require_once __DIR__ . '/../Math/BigInteger.php';
+require_once __DIR__ . '/ASN1.php';
 
 /**
  * Flag to only accept signatures signed by certificate authorities
@@ -315,9 +308,6 @@ class X509
      */
     function X509()
     {
-        if (!class_exists('Math_BigInteger')) {
-            include_once 'Math/BigInteger.php';
-        }
 
         // Explicitly Tagged Module, 1988 Syntax
         // http://tools.ietf.org/html/rfc5280#appendix-A.1
@@ -981,7 +971,7 @@ class X509
                                  'constant' => 0,
                                  'optional' => true,
                                  'implicit' => true,
-                                 'default' => new Math_BigInteger(0)
+                                 'default' => new BigInteger(0)
                              ) + $BaseDistance,
                 'maximum' => array(
                                  'constant' => 1,
@@ -3265,7 +3255,7 @@ class X509
 
             $startDate = !empty($this->startDate) ? $this->startDate : @date('D, d M Y H:i:s O');
             $endDate = !empty($this->endDate) ? $this->endDate : @date('D, d M Y H:i:s O', strtotime('+1 year'));
-            $serialNumber = !empty($this->serialNumber) ? $this->serialNumber : new Math_BigInteger();
+            $serialNumber = !empty($this->serialNumber) ? $this->serialNumber : new BigInteger();
 
             $this->currentCert = array(
                 'tbsCertificate' =>
@@ -3554,7 +3544,7 @@ class X509
             $crlNumber = $this->serialNumber;
         } else {
             $crlNumber = $this->getExtension('id-ce-cRLNumber');
-            $crlNumber = $crlNumber !== false ? $crlNumber->add(new Math_BigInteger(1)) : null;
+            $crlNumber = $crlNumber !== false ? $crlNumber->add(new BigInteger(1)) : null;
         }
 
         $this->removeExtension('id-ce-authorityKeyIdentifier');
@@ -3705,7 +3695,7 @@ class X509
      */
     function setSerialNumber($serial, $base = -256)
     {
-        $this->serialNumber = new Math_BigInteger($serial, $base);
+        $this->serialNumber = new BigInteger($serial, $base);
     }
 
     /**
@@ -4352,7 +4342,7 @@ class X509
      */
     function _revokedCertificate(&$rclist, $serial, $create = false)
     {
-        $serial = new Math_BigInteger($serial);
+        $serial = new BigInteger($serial);
 
         foreach ($rclist as $i => $rc) {
             if (!($serial->compare($rc['userCertificate']))) {

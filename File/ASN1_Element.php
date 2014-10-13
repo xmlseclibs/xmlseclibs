@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ASN.1 Element
  *
@@ -10,9 +11,9 @@
  * @package ASN1
  */
 
-namespace File\ASN1_Element;
+class ASN1_Element
+{
 
-class ASN1_Element {
     /**
      * Raw element value
      *
@@ -32,4 +33,5 @@ class ASN1_Element {
     {
         $this->element = $encoded;
     }
+
 }

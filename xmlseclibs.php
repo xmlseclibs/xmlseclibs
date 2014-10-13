@@ -45,6 +45,8 @@
   i.e.: $canonical = C14NGeneral($domelement, TRUE);
  */
 
+require_once 'File/X509.php';
+
 /* helper function */
 function sortAndAddAttrs($element, $arAtts)
 {
@@ -832,6 +834,7 @@ class XMLSecurityDSig
             }
             return C14NGeneral($node, $exclusive, $withComments);
         }
+      
         return $node->C14N($exclusive, $withComments, $arXPath, $prefixList);
     }
 
@@ -1404,6 +1407,21 @@ class XMLSecurityDSig
                     $data .= trim($curData) . PHP_EOL;
                 }
                 
+                if (strncmp($curData, 'issuer=', 7) == 0) {
+                    $issuerData = str_replace('issuer=', '', trim($curData));
+                    $issuerTmp = explode('/', $issuerData);
+                    $issuer = '';
+                    krsort($issuerTmp);
+                    foreach ($issuerTmp as $issuerValue) {
+                        if (!empty($issuerValue)) {
+                            $issuer .= $issuerValue . ',';
+                        }
+                    }
+                    $issuerLen = strlen($issuer);
+                    $issuer = substr($issuer, 0, $issuerLen - 1);
+                    $certlist[$i]['z_IssuerName'] = $issuer;
+                }
+                
                 if (strncmp($curData, 'subject=', 7) == 0) {
                     $issuerData = str_replace('subject=', '', trim($curData));
                     $issuerTmp = explode('/', $issuerData);
@@ -1421,16 +1439,25 @@ class XMLSecurityDSig
             }
             
             foreach ($certlist as $key => $certificateData) {
-                if (empty($certificateData)) {
+                if (empty($certificateData['Certificate'])) {
                     unset($certlist[$key]);
+                    continue;
                 }
                 
                 $certicate = $beginCertificate . PHP_EOL .
-                             $certificateData['Certificate'] . PHP_EOL .
+                             $certificateData['Certificate'] .
                              $endCertificate;
-                        
-                echo $certicate;Exit;
-                var_dump($certicate, openssl_x509_parse($certicate));Exit;
+                
+                $objX509 = new X509();
+                $cert = $objX509->loadX509($certicate);
+               
+                $certlist[$key]['z_SerialNumber'] = $cert['tbsCertificate']['serialNumber']->toString();
+                ksort($certlist[$key]);
+                
+                $certlist[$key]['IssuerName'] = $certlist[$key]['z_IssuerName'];
+                $certlist[$key]['SerialNumber'] = $certlist[$key]['z_SerialNumber'];
+                unset($certlist[$key]['z_IssuerName']);
+                unset($certlist[$key]['z_SerialNumber']);
             }
             
             return $certlist;
@@ -1480,11 +1507,25 @@ class XMLSecurityDSig
         $x509DataNode = $baseDoc->createElementNS(XMLSecurityDSig::XMLDSIGNS, 'ds:X509Data');
         $keyInfo->appendChild($x509DataNode);
 
+        foreach ($certs as $X509Element) {
+            $x509IssueNode = $baseDoc->createElementNS(XMLSecurityDSig::XMLDSIGNS, 'ds:X509IssuerSerial');
+            foreach ($X509Element as $X509Name => $X509Value) {
+                $x509CertNode = $baseDoc->createElementNS(XMLSecurityDSig::XMLDSIGNS, 'ds:X509' . $X509Name, $X509Value);
+                if ($X509Name == 'IssuerName' || $X509Name == 'SerialNumber') {
+                    $x509DataNode->appendChild($x509IssueNode);
+                    $x509IssueNode->appendChild($x509CertNode);
+                } else {
+                    $x509DataNode->appendChild($x509CertNode);
+                }
+            }
+        }
+        
         // Atach all certificate nodes
-        foreach ($certs as $X509Cert) {
+        /*
+         foreach ($certs as $X509Cert) {
             $x509CertNode = $baseDoc->createElementNS(XMLSecurityDSig::XMLDSIGNS, 'ds:X509Certificate', $X509Cert);
             $x509DataNode->appendChild($x509CertNode);
-        }
+        }*/
     }
 
     public function add509Cert($cert, $isPEMFormat = TRUE, $isURL = False)
