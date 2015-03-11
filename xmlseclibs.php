@@ -717,10 +717,16 @@ class XMLSecurityDSig
     /* This variable contains an associative array of validated nodes. */
     private $validatedNodes = NULL;
 
-    public function __construct()
+    public function __construct($id = null)
     {
         $sigdoc = new DOMDocument();
         $sigdoc->loadXML(XMLSecurityDSig::template);
+        if(!empty($id)) {
+            $firma = $sigdoc->getElementsByTagName("Signature")->item(0);
+            $attr =  $sigdoc->createAttribute('Id');
+            $attr->value = $id;
+            $firma->appendChild($attr);
+        }
         $this->sigNode = $sigdoc->documentElement;
     }
 
