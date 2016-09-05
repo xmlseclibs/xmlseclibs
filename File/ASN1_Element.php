@@ -29,7 +29,7 @@ class ASN1_Element
      * @return ASN1_Element
      * @access public
      */
-    function ASN1_Element($encoded)
+    function __construct($encoded)
     {
         $this->element = $encoded;
     }
