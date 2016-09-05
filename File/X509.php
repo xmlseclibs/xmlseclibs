@@ -306,7 +306,7 @@ class X509
      * @return X509
      * @access public
      */
-    function X509()
+    function __construct()
     {
 
         // Explicitly Tagged Module, 1988 Syntax
