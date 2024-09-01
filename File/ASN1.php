@@ -484,7 +484,7 @@ class ASN1
         switch (true) {
             case $mapping['type'] == ASN1_TYPE_ANY:
                 $intype = $decoded['type'];
-                if (isset($decoded['constant']) || !isset($this->ANYmap[$intype]) || ($this->encoded[$decoded['start']] & 0x20)) {
+                if (isset($decoded['constant']) || !isset($this->ANYmap[$intype]) || (ord($this->encoded[$decoded['start']]) & 0x20)) {
                     return new ASN1_Element(substr($this->encoded, $decoded['start'], $decoded['length']));
                 }
                 $inmap = $this->ANYmap[$intype];
